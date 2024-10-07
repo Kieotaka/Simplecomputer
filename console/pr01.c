@@ -1,83 +1,51 @@
-#include "../include/mySimpleComputer.h"
 #include "console.h"
-#include <stdio.h>
 
+// Приложение console
 int
 main ()
 {
-  // Инициализация оперативной памяти, аккумулятора, счетчика команд и
-  // регистра флагов
+  if (!isatty (STDOUT_FILENO))
+    {
+      printf ("Error: Output is not a terminal\n");
+      return 1;
+    }
+
+  int rows, cols;
+  mt_getscreensize (&rows, &cols);
+  if (rows < INOUT_BLOCK_HEIGHT + INOUT_BLOCK_Y + 1 || cols < FLAGS_X + 9)
+    {
+      printf ("Error: Terminal window is too small\n");
+      return 1;
+    }
+
+  mt_clrscr ();
+
+  // Инициализация памяти, регистров и аккумулятора
   sc_memoryInit ();
+  sc_regInit ();
   sc_accumulatorInit ();
   sc_icounterInit ();
-  sc_regInit ();
 
-  // Установка произвольных значений в оперативную память и вывод ее
-  // содержимого (в данном примере установим все ячейки памяти в значение 5)
-  for (int i = 7; i < 26; i++)
-    {
-      sc_memorySet (i, 5);
-    }
-
-  // Вывод содержимого оперативной памяти
-  for (int i = 0; i < MEMORY_SIZE; i++)
-    {
-      if ((i) % 10 == 0)
-        {
-          printf ("\n");
-        }
-      printCell (i);
-    }
-  printf ("\n");
-
-  // Попытка задать недопустимое значение ячейке памяти
-  int invalidMemoryValue = 40000;
-  int result = sc_memorySet (10, invalidMemoryValue);
-  printf ("Status of setting invalid memory value: %d\n", result);
-
-  // Установка произвольных значений флагов и вывод их содержимого
-  sc_regSet (FLAG_OVERFLOW_MASK, 1);
+  sc_regSet (FLAG_OVERFLOW_MASK, 0);
   sc_regSet (FLAG_DIVISION_BY_ZERO_MASK, 0);
   sc_regSet (FLAG_OUT_OF_MEMORY_MASK, 1);
-  sc_regSet (FLAG_INVALID_COMMAND_MASK, 0);
+  sc_regSet (FLAG_INVALID_COMMAND_MASK, 1);
   sc_regSet (FLAG_IGNORE_CLOCK_MASK, 1);
+
+  // Вывод текстовых данных консоли
+  printMemory ();
   printFlags ();
-
-  // Попытка установить некорректное значение флага
-  result = sc_regSet (FLAG_OVERFLOW_MASK, 2);
-  printf ("Status of setting invalid flag value: %d\n", result);
-
-  // Установка значения аккумулятора и вывод его на экран
-  sc_accumulatorSet (100);
+  printDecodedCommand (15);
   printAccumulator ();
-
-  // Попытка задать недопустимое значение аккумулятору
-  int invalidAccValue = 40000;
-  result = sc_accumulatorSet (invalidAccValue);
-  printf ("Status of setting invalid accumulator value: %d\n", result);
-
-  // Установка значения счетчика команд и вывод его на экран
-  sc_icounterSet (50);
   printCounters ();
+  printCommand ();
 
-  // Попытка задать недопустимое значение счетчику команд
-  int invalidCounterValue = -10;
-  result = sc_icounterSet (invalidCounterValue);
-  printf ("Status of setting invalid counter value: %d\n", result);
+  // Вывод 7 произвольных ячеек в блок IN-OUT
+  for (int i = 0; i < 7; i++)
+    {
+      printTerm (i, 1);
+    }
 
-  // Декодирование произвольной ячейки памяти и значения
-  // аккумулятора
-  printCell (8);
-  printf ("\n");
-  printAccumulator ();
-
-  // Кодирование команды и вывод полученного значения в разных системах
-  // счисления
-  int command = 0x33;
-  int encodedValue;
-  sc_commandEncode (0, command, 0x59, &encodedValue);
-  printDecodedCommand (encodedValue);
-  printf ("\n");
-
+  mt_gotoXY (0, 25);
   return 0;
 }

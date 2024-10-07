@@ -1,6 +1,6 @@
 # SimpleComputer
 
-Ип-217
+ИП-217
 Белоусов М.М.
 
 ## Getting started
